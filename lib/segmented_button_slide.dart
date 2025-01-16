@@ -1,5 +1,3 @@
-library segmented_button_slide;
-
 import 'package:flutter/material.dart';
 
 class SegmentedButtonSlideEntry {
@@ -9,9 +7,13 @@ class SegmentedButtonSlideEntry {
   /// [icon] defines the label of the tile
   final String? label;
 
+  /// [widget] defines the widget of the tile
+  final Widget? widget;
+
   const SegmentedButtonSlideEntry({
     this.icon,
     this.label,
+    this.widget,
   });
 }
 
@@ -30,8 +32,8 @@ class SegmentedButtonSlideColors {
 
 class SegmentedButtonSlide extends StatelessWidget {
   /// [entries] accepts a list of SegmentedButtonSlideEntry.
-  /// Each SegmentedButtonSlideEntry is formed by an icon and a label.
-  /// You must declare at least one of the two
+  /// Each SegmentedButtonSlideEntry is formed by an icon, a label, or a widget.
+  /// You must declare at least one of the three.
   final List<SegmentedButtonSlideEntry> entries;
 
   /// [selectedEntry] accepts an int. Defines the item that's currently selected.
@@ -215,8 +217,10 @@ class _ButtonEntryState extends State<_ButtonEntry>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.entry.label == null && widget.entry.icon == null) {
-      throw Exception("No icon or label specified.");
+    if (widget.entry.label == null &&
+        widget.entry.icon == null &&
+        widget.entry.widget == null) {
+      throw Exception("No icon, label, or widget specified.");
     }
 
     final defaultSelectedColor = Theme.of(context).primaryColor;
@@ -261,8 +265,8 @@ class _ButtonEntryState extends State<_ButtonEntry>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (widget.entry.icon != null)
-                    _AnimatedIcon(
+                  if (widget.entry.widget == null && widget.entry.icon != null)
+                    AnimatedEntryIcon(
                       icon: widget.entry.icon!,
                       activeColor:
                           selectedTextStyle.color ?? defaultSelectedColor,
@@ -276,9 +280,11 @@ class _ButtonEntryState extends State<_ButtonEntry>
                       duration: widget.animationDuration,
                       curve: widget.curve,
                     ),
-                  if (widget.entry.label != null && widget.entry.icon != null)
+                  if (widget.entry.widget == null &&
+                      widget.entry.label != null &&
+                      widget.entry.icon != null)
                     const SizedBox(width: 12),
-                  if (widget.entry.label != null)
+                  if (widget.entry.widget == null && widget.entry.label != null)
                     AnimatedDefaultTextStyle(
                       duration: widget.animationDuration,
                       curve: widget.curve,
@@ -291,7 +297,8 @@ class _ButtonEntryState extends State<_ButtonEntry>
                           overflow: widget.textOverflow,
                         ),
                       ),
-                    )
+                    ),
+                  if (widget.entry.widget != null) widget.entry.widget!,
                 ],
               ),
             ),
@@ -302,7 +309,7 @@ class _ButtonEntryState extends State<_ButtonEntry>
   }
 }
 
-class _AnimatedIcon extends StatefulWidget {
+class AnimatedEntryIcon extends StatefulWidget {
   final IconData icon;
   final Color activeColor;
   final Color normalColor;
@@ -313,7 +320,7 @@ class _AnimatedIcon extends StatefulWidget {
   final Duration duration;
   final Curve curve;
 
-  const _AnimatedIcon({
+  const AnimatedEntryIcon({
     required this.icon,
     required this.activeColor,
     required this.normalColor,
@@ -323,13 +330,14 @@ class _AnimatedIcon extends StatefulWidget {
     this.size,
     required this.duration,
     required this.curve,
+    super.key,
   });
 
   @override
-  State<_AnimatedIcon> createState() => _AnimatedIconState();
+  State<AnimatedEntryIcon> createState() => _AnimatedEntryIconState();
 }
 
-class _AnimatedIconState extends State<_AnimatedIcon>
+class _AnimatedEntryIconState extends State<AnimatedEntryIcon>
     with TickerProviderStateMixin {
   late AnimationController _activeController;
   late AnimationController _hoverController;
